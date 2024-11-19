@@ -9,6 +9,8 @@ import tqdm
 import shortuuid
 import pickle
 
+MODEL_NAME="llama3:latest"
+
 def open_file(filepath):
     with open(filepath, 'r', encoding='utf-8') as infile:
         return infile.read()
@@ -29,6 +31,7 @@ def claim_divider_parse_answer(answer, gt_entity):
             nth_answer = nth_answer.strip()
             for i in range(5):
                 if str(i+1)+'. ' in nth_answer[:5]:
+                    print("flag2")
                     temp_ans = nth_answer.split(str(i+1)+'. ')[1]
                     temp_split = temp_ans.split(', Entity set: ')
                     sentence = temp_split[0]
@@ -45,7 +48,8 @@ def claim_divider_parse_answer(answer, gt_entity):
                         new_entity_set.append(entity_set)
                     break
             processed_answer_set[sentence] = new_entity_set
-    except:
+    except Exception as e:
+        print(f"w1:{e}")
         processed_answer_set[sentence] = [gt_entity]
 
     return processed_answer_set
@@ -77,7 +81,7 @@ def get_answer(qid: int, claim: str, gt_entity: str, KG: dict, max_tokens: int):
     for _ in range(5):
         try:
             response = openai.ChatCompletion.create(
-                 model="gpt-3.5-turbo-0613",
+                 model=MODEL_NAME,
                 messages=[
                     {"role": "system", "content": "You are a helpful assistant."},
                     {
@@ -141,7 +145,7 @@ def get_answer(qid: int, claim: str, gt_entity: str, KG: dict, max_tokens: int):
         for _ in range(5):
             try:
                 response = openai.ChatCompletion.create(
-                    model="gpt-3.5-turbo-0613",
+                    model=MODEL_NAME,
                     messages=[
                         {"role": "system", "content": "You are a helpful assistant."},
                         {
@@ -287,7 +291,7 @@ def get_answer(qid: int, claim: str, gt_entity: str, KG: dict, max_tokens: int):
     for _ in range(5):
         try:
             response = openai.ChatCompletion.create(
-                 model="gpt-3.5-turbo-0613",
+                 model=MODEL_NAME,
                 messages=[
                     {"role": "system", "content": "You are a helpful assistant."},
                     {
@@ -313,7 +317,10 @@ def get_answer(qid: int, claim: str, gt_entity: str, KG: dict, max_tokens: int):
 
 if __name__ == "__main__":
 
-    openai.api_key = open_file('./openai_api_key.txt')
+    # openai.api_key = open_file('./openai_api_key.txt')
+    """使用本地部署的ollama"""
+    openai.api_base = "http://127.0.0.1:12434/v1"
+    openai.api_key = "ollama"
 
     print('Start!!!')
     with open('./data/metaqa_kg.pickle', 'rb') as f:
